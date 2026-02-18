@@ -1,20 +1,55 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:time_tracker_02/provider/time_entry_provider.dart';
 import 'package:time_tracker_02/screen/home.dart';
+import 'package:time_tracker_02/screen/management/manage_project_screen.dart';
+import 'package:time_tracker_02/screen/management/manage_task_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  runApp(
+    MyApp(sharedPreferences: prefs),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final SharedPreferences sharedPreferences;
 
-  // This widget is the root of your application.
+  const MyApp({super.key, required this.sharedPreferences});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowMaterialGrid: false,
-      home: ScreenUtilInit(designSize: Size(375, 812), child: HomePage(),)
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => TimeEntryProvider(sharedPreferences),
+        ),
+      ],
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812),
+        minTextAdapt: true,
+        splitScreenMode: true,
+        builder: (context, child) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Time Tracker',
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+              useMaterial3: true,
+            ),
+            initialRoute: '/',
+            routes: {
+              '/': (context) => const HomePage(),
+              '/manage_projects': (context) => const ProjectManagementScreen(),
+              '/manage_tasks': (context) => const TaskManagementScreen(),
+            },
+          );
+        },
+      ),
     );
   }
 }
